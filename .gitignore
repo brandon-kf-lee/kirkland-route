@@ -1,0 +1,13 @@
+#Ignore MacOS .DS_Store
+.DS_Store
+
+# Ignore environment variables
+.env
+
+# Ignore Python virtual environment
+venv
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
