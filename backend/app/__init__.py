@@ -19,10 +19,12 @@ def create_app():
     # Import and register blueprints
     from app.routes.admin import admin_bp
     from app.routes.trips import trips_bp
+    from app.routes.users import users_bp
     #from app.routes.stations import stations_bp
 
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(trips_bp, url_prefix='/api/trips')
+    app.register_blueprint(users_bp, url_prefix='/api/users')
     #app.register_blueprint(stations_bp, url_prefix='/api/stations')
     
 
