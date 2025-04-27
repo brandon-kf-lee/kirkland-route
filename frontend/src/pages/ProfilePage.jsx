@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import background from '../assets/background-map.png';
 import PageWrapper from '../components/PageWrapper';
+import apiBaseUrl from '../api';
 
 function ProfilePage() {
   const navigate = useNavigate();
@@ -36,7 +37,7 @@ function ProfilePage() {
     e.preventDefault();
   
     try {
-      const response = await fetch('/api/users/profile', {
+      const response = await fetch(`${apiBaseUrl}/api/users/profile`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

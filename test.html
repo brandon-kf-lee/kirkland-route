@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Polyline (Dynamic Fetch)</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA8O7NoxrTHH5FpjhgkUqHm0NzKbq-IC4U&libraries=geometry"></script>
+    <script>
+      function initMap() {
+        // 1. Center somewhere in California (or adjust if needed)
+        const center = { lat: 34.0, lng: -118.0 };
+
+        const map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 8,
+          center: center,
+        });
+
+        // 2. Fetch the polyline dynamically from your backend
+        fetch('http://127.0.0.1:5000/api/trips/test-polyline')  // <-- YOUR BACKEND ENDPOINT
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+          const encodedPath = data.polyline;
+          console.log("Fetched polyline string:", encodedPath);
+
+          const path = google.maps.geometry.encoding.decodePath(encodedPath);
+          console.log("Decoded path points:", path);
+
+          const polyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: "#FF0000",
+            strokeOpacity: 1.0,
+            strokeWeight: 4,
+          });
+        
+            console.log("Polyline object created:", polyline);
+        
+            polyline.setMap(map);
+          })
+          .catch(error => {
+            console.error('Error fetching polyline:', error);
+          });
+      }
+    </script>
+  </head>
+  <body onload="initMap()">
+    <div id="map" style="height: 100vh; width: 100vw;"></div>
+  </body>
+</html>

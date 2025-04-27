@@ -5,6 +5,8 @@ import statsIcon from '../assets/stats-icon.png';
 import carpoolIcon from '../assets/carpool-icon.png';
 import backgroundMap from '../assets/background-map.png';
 import PageWrapper from '../components/PageWrapper';
+import apiBaseUrl from '../api';
+
 
 function decodePolyline(encoded) {
     let len = encoded.length;
@@ -65,7 +67,7 @@ function MapPage() {
       const username = localStorage.getItem('username');
   
       // Step 1: Get user profile
-      const profileResponse = await fetch(`/api/users/profile/${username}`, {
+      const profileResponse = await fetch(`${apiBaseUrl}/api/users/profile/${username}`, {
         method: 'GET',
       });
       const profileData = await profileResponse.json();
@@ -77,7 +79,7 @@ function MapPage() {
       }
   
       // Step 2: Create a trip
-      const createTripResponse = await fetch('/api/trips/create-trip', {
+      const createTripResponse = await fetch(`'${apiBaseUrl}/api/trips/create-trip`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +100,7 @@ function MapPage() {
       console.log('Created trip:', tripId);
   
       // Step 3: Calculate Costco stops (JUST send trip_id!!)
-      const response = await fetch('/api/trips/calculate-trip-costco-stops', {
+      const response = await fetch(`${apiBaseUrl}/api/trips/calculate-trip-costco-stops`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
