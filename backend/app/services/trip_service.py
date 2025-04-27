@@ -67,9 +67,9 @@ def costco_stops_service(trip_id):
 
     origin = trip['origin']  # [lat, lng]
     destination = trip['destination']  # [lat, lng]
-    mpg = user["mpg"]
-    tank_size = user["tank_size"]
-    buffer_percent = user["fuel_buffer_percent"]
+    mpg = float(user["mpg"])
+    tank_size = float(user["tank_size"])
+    buffer_percent = float(user["fuel_buffer_percent"])
 
     # Calculate effective range
     car_range = mpg * tank_size
@@ -241,7 +241,7 @@ def calculate_trip_stats(trip_id, google_requery):
     total_miles = total_meters / 1609.34  # Convert meters to miles
 
     # --- 2. Gas Efficiency (Gallons Used) ---
-    mpg = user.get('mpg', 25)  # fallback default
+    mpg = float(user.get('mpg', 25))  # fallback default
     if mpg <= 0:
         mpg = 25  # sanity fallback
     estimated_total_gallons = total_miles / mpg

@@ -20,11 +20,11 @@ from app.services.trip_service import no_stops_service, costco_stops_service
 trips_bp = Blueprint('trips', __name__)
 
 
-@trips_bp.route('/plan', methods=['POST'])
-def plan_trip():
-    trip_data = request.json
-    trip_id = create_trip(trip_data)
-    return jsonify({"trip_id": trip_id}), 201
+# @trips_bp.route('/plan', methods=['POST'])
+# def plan_trip():
+#     trip_data = request.json
+#     trip_id = create_trip(trip_data)
+#     return jsonify({"trip_id": trip_id}), 201
 
 
 # TODO: Redundant?
@@ -36,6 +36,31 @@ def fetch_trip(trip_id):
         return jsonify(trip), 200
     else:
         return jsonify({"error": "Trip not found"}), 404
+
+@trips_bp.route('/create-trip', methods=['POST'])
+def create_trip_route():
+    """
+    Create a new trip with origin and destination.
+    Returns the created trip_id.
+    """
+    try:
+        data = request.get_json()
+
+        origin = data.get('origin')
+        destination = data.get('destination')
+        user_id = data.get('user_id')  # optional if you want to save user info
+
+        if not origin or not destination:
+            return jsonify({"error": "Missing origin or destination"}), 400
+
+        # Create trip
+        trip_id = create_trip(origin, destination, user_id)
+
+        return jsonify({"trip_id": str(trip_id)}), 201
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
 
 
 @trips_bp.route('/calculate-trip-no-stops', methods=['POST'])
@@ -70,18 +95,38 @@ Expected JSON body:
 """
 @trips_bp.route('/calculate-trip-costco-stops', methods=['POST'])
 def calculate_trip_costco_stops():
+    """
+    Requery the trip to calculate Costco stops along the route.
+    """
+    try:
+        data = request.get_json()
+        trip_id = data.get('trip_id')
 
-    data = request.get_json()
-    trip_id = data.get('trip_id')
+        if not trip_id:
+            return jsonify({"error": "Missing trip_id"}), 400
 
-    if not trip_id:
-        return jsonify({"error": "Missing trip_id"}), 400
+        # Recalculate Costco stops
+        success = costco_stops_service(trip_id)
 
-    trip = costco_stops_service(trip_id)
-    if trip:
-        return jsonify({"message": "Trip with Costco stops calculated successfully"}), 200
-    else:
-        return jsonify({"error": "Trip with Costco stops calculation failed"}), 400
+        if not success:
+            return jsonify({"error": "Costco stop calculation failed"}), 500
+
+        updated_trip = get_trip_by_id(trip_id)
+        if not updated_trip:
+            return jsonify({"error": "Trip not found after update"}), 404
+
+        #print(updated_trip)
+
+        # Send back the polyline
+        return jsonify({
+            "message": "Trip with Costco stops calculated successfully",
+            "polyline": updated_trip['google_polyline']
+        }), 200
+
+    except Exception as e:
+        print(f"[ERROR] An error occurred: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 
 @trips_bp.route('/test-polyline', methods=['GET'])
