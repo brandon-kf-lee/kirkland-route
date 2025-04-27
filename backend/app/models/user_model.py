@@ -55,3 +55,11 @@ def save_user_profile(data):
     except Exception as e:
         print(f"[ERROR] Failed to save user profile: {e}")
         return False
+
+def get_user_by_username(username):
+    users_collection = current_app.db.users
+    try:
+        return users_collection.find_one({'username': username})
+    except Exception as e:
+        print(f"[ERROR] Could not retrieve user by username: {e}")
+        return None
