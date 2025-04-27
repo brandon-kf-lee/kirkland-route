@@ -39,14 +39,14 @@ function decodePolyline(encoded) {
     }
   
     return path;
-  }
-  
+}
 
 function MapPage() {
   const [openTabs, setOpenTabs] = useState([]);
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
   const [path, setPath] = useState([]);
+  const [googleMapsUrl, setGoogleMapsUrl] = useState(''); // ✅ Added
 
   const handleToggleTab = (tabName) => {
     if (openTabs.includes(tabName)) {
@@ -104,7 +104,7 @@ function MapPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          trip_id: tripId,   // <-- ONLY trip_id, no origin, no destination, no mpg
+          trip_id: tripId,
         }),
       });
   
@@ -112,12 +112,18 @@ function MapPage() {
       console.log('Backend response:', data);
   
       if (data.polyline) {
-        // Decode the polyline from the backend response
         const decodedPath = decodePolyline(data.polyline);
         setPath(decodedPath); // Set the decoded polyline path
       } else {
         console.error('No polyline received from backend');
       }
+
+      if (data.google_maps_url) { // ✅ New: capture Google Maps URL
+        setGoogleMapsUrl(data.google_maps_url);
+      } else {
+        console.error('No Google Maps URL received from backend');
+      }
+
     } catch (error) {
       console.error('Error calculating trip:', error);
     }
@@ -182,10 +188,19 @@ function MapPage() {
                     />
                     <button
                       onClick={handleCalculateRoute}
-                      className="px-8 py-2 border-2 border-white text-white rounded-xl hover:bg-white hover:text-black transition"
+                      className="px-8 py-2 border-2 border-white text-white rounded-xl hover:bg-white hover:text-black transition mb-4"
                     >
                       Calculate
                     </button>
+                    {/* ✅ New "Open in Google Maps" Button */}
+                    {googleMapsUrl && (
+                      <button
+                        onClick={() => window.open(googleMapsUrl, '_blank')}
+                        className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl transition"
+                      >
+                        Open in Google Maps
+                      </button>
+                    )}
                   </div>
                 )}
                 {tab === 'stats' && (
@@ -226,7 +241,7 @@ function MapPage() {
                 </GoogleMap>
                 </div>
             </LoadScript>
-            </div>
+        </div>
       </div>
     </div>
   );

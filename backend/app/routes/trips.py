@@ -106,27 +106,23 @@ def calculate_trip_costco_stops():
             return jsonify({"error": "Missing trip_id"}), 400
 
         # Recalculate Costco stops
-        success = costco_stops_service(trip_id)
+        updated_trip = costco_stops_service(trip_id)  # ✅ direct
 
-        if not success:
-            return jsonify({"error": "Costco stop calculation failed"}), 500
-
-        updated_trip = get_trip_by_id(trip_id)
         if not updated_trip:
-            return jsonify({"error": "Trip not found after update"}), 404
+            return jsonify({"error": "Costco stop calculation failed"}), 500
 
         #print(updated_trip)
 
-        # Send back the polyline
+        # Send back polyline + maps url
         return jsonify({
             "message": "Trip with Costco stops calculated successfully",
-            "polyline": updated_trip['google_polyline']
+            "polyline": updated_trip['google_polyline'],
+            "google_maps_url": updated_trip.get('google_maps_url', '')  # <- safer
         }), 200
 
     except Exception as e:
         print(f"[ERROR] An error occurred: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
 
 
 @trips_bp.route('/test-polyline', methods=['GET'])
