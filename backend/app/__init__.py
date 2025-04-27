@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 from pymongo import MongoClient
@@ -7,6 +8,8 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
     
     # MongoDB setup
     mongo_uri = os.getenv('MONGO_URI')

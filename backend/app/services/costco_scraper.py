@@ -150,7 +150,7 @@ def process_and_store_warehouse(stations_collection, warehouse):
         # If last update was within the freshness window, skip update
         if (current_time - last_update_time) < FRESHNESS_THRESHOLD_SECONDS:
             print(f"Skipped warehouse {stloc_id} - {existing.get('name', 'Unknown')} (fresh, updated recently)")
-            return
+            return -1
 
     # Otherwise, proceed to update
     data = {
@@ -170,8 +170,7 @@ def process_and_store_warehouse(stations_collection, warehouse):
         upsert=True              # Insert if not exists
     )
     print(f"Inserted/updated warehouse: {stloc_id} - {data['name']}")
-    
-
+    return 1
 
 # ---------------------- Scraping Main Functions ----------------------
 """
@@ -184,10 +183,10 @@ def scrape_all_costco_stations(db):
     stations_collection.create_index("stlocID", unique=True)
     warehouse_count = 0
 
-    lat = W_LAT_START
-    while lat <= W_LAT_END:
-        lng = W_LNG_START
-        while lng <= W_LNG_END:
+    lat = US_LAT_START
+    while lat <= US_LAT_END:
+        lng = US_LNG_START
+        while lng <= US_LNG_END:
             try:
                 print(f"Fetching warehouses near ({lat}, {lng})...")
                 warehouses = fetch_warehouses_near(lat, lng)
@@ -198,7 +197,8 @@ def scrape_all_costco_stations(db):
 
                 # Costco's weird API: warehouses start at index 1
                 for warehouse in warehouses[1:]:
-                    process_and_store_warehouse(stations_collection, warehouse)
+                    if process_and_store_warehouse(stations_collection, warehouse) == 1:
+                        warehouse_count += 1
             except Exception as e:
                 print(f"Error fetching ({lat}, {lng}): {e}")
 
@@ -209,7 +209,6 @@ def scrape_all_costco_stations(db):
         lat += LAT_STEP
 
     print(f"Finished scraping. {warehouse_count} warehouses updated or inserted.")
-    warehouse_count += 1
 
 """
 Scrape Costco warehouses near a specific single coordinate (latitude, longitude).
