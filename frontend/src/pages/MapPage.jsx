@@ -3,6 +3,7 @@ import routeIcon from '../assets/route-icon.png';
 import statsIcon from '../assets/stats-icon.png';
 import carpoolIcon from '../assets/carpool-icon.png';
 import backgroundMap from '../assets/background-map.png';
+import PageWrapper from '../components/PageWrapper';
 
 function MapPage() {
   const [openTabs, setOpenTabs] = useState([]);

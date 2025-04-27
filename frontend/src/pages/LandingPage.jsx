@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import background from '../assets/background.png';
 import logo from '../assets/logo.png';
 import gasPump from '../assets/gas-pump.png';
+import PageWrapper from '../components/PageWrapper';
 
 function LandingPage() {
     return (

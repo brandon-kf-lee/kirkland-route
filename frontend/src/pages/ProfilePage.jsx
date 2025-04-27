@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import background from '../assets/background-map.png';
+import PageWrapper from '../components/PageWrapper';
 
 function ProfilePage() {
   const navigate = useNavigate();
