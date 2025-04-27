@@ -75,3 +75,21 @@ def update_trip_google_maps_url(trip_id, origin, destination, waypoints):
         {"_id": ObjectId(trip_id)},
         {"$set": {"google_maps_url": maps_url}}
     )
+
+def update_trip_stats(trip_id, stats_data):
+    """Update trip statistics for a trip in the database.
+
+    Args:
+        trip_id (str): ID of the trip to update.
+        stats_data (dict): Dictionary containing updated trip stats.
+    """
+
+    trips_collection = current_app.db.trips
+    result = trips_collection.update_one(
+        {"_id": ObjectId(trip_id)},
+        {"$set": {"stats": stats_data}}
+    )
+    if result.matched_count == 0:
+        print(f"[ERROR] No trip found with ID {trip_id} to update stats.")
+    else:
+        print(f"[INFO] Trip stats updated for trip {trip_id}.")

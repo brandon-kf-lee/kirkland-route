@@ -8,9 +8,9 @@ Description: Handles the logic for trips, including route calculation and MongoD
 import polyline
 
 # Model Imports
-from app.models.trip_model import get_trip_by_id, update_trip_polyline, update_trip_waypoints, update_trip_google_maps_url
+from app.models.trip_model import get_trip_by_id, update_trip_polyline, update_trip_waypoints, update_trip_google_maps_url, update_trip_stats
 from app.models.user_model import get_user_by_id 
-from app.models.station_model import get_all_stations  # (you might already have this)
+from app.models.station_model import get_all_stations
 
 # Service Imports
 from app.services.google_maps_service import get_route_from_google
@@ -118,6 +118,9 @@ def costco_stops_service(trip_id):
     # 7. Save a prebuilt Google Maps URL
     update_trip_google_maps_url(trip_id, origin, destination, costco_stops)
 
+    # 8. Calculate trip stats
+    calculate_trip_stats(trip_id, google_requery)
+    
     print(f"[SUCCESS] Trip {trip_id} updated with Costco-optimized route.")
     return get_trip_by_id(trip_id)
 
@@ -214,3 +217,78 @@ def find_gas_stops_along_route(polyline_points, effective_range_miles):
 
 def decode_polyline(encoded_polyline):
     return polyline.decode(encoded_polyline)
+
+def calculate_trip_stats(trip_id, google_requery):
+    """Calculate trip stats like miles, cost, fuel efficiency, CO2 emissions."""
+
+    # Fetch trip and user data
+    trip = get_trip_by_id(trip_id)
+    if not trip:
+        print(f"[ERROR] Trip {trip_id} not found.")
+        return
+    user = get_user_by_id(trip['user_id'])
+    if not user:
+        print(f"[ERROR] User {trip['user_id']} not found.")
+        return
+
+    # --- 1. Total Miles ---
+    # Total distance from Google requery
+    total_meters = 0
+    for route in google_requery.get('routes', []):
+        for leg in route.get('legs', []):
+            total_meters += leg.get('distance', {}).get('value', 0)
+
+    total_miles = total_meters / 1609.34  # Convert meters to miles
+
+    # --- 2. Gas Efficiency (Gallons Used) ---
+    mpg = user.get('mpg', 25)  # fallback default
+    if mpg <= 0:
+        mpg = 25  # sanity fallback
+    estimated_total_gallons = total_miles / mpg
+
+    # --- 3. Estimated Cost ---
+    stations = get_all_stations()
+
+    avg_gas_price = 4.00  # fallback default
+    prices = []
+
+    if trip['waypoints']:
+        for waypoint in trip['waypoints']:
+            lat = waypoint[0]
+            lng = waypoint[1]
+
+            if lat is None or lng is None:
+                continue
+
+            # Find matching station locally
+            for station in stations:
+                station_lat = station['lat']
+                station_lng = station['lng']
+
+                if station_lat is None or station_lng is None:
+                    continue
+
+                # Use a small tolerance for floating point comparison (~55 meters)
+                if abs(lat - station_lat) <= 0.0005 and abs(lng - station_lng) <= 0.0005:
+                    if station.get('price_regular'):
+                        prices.append(station['price_regular'])
+                    break  # Found a matching station, no need to check others
+
+    if prices:
+        avg_gas_price = sum(prices) / len(prices)
+
+    estimated_total_cost = estimated_total_gallons * avg_gas_price
+
+    # --- 4. CO2 Emissions ---
+    # ~8.887 kg CO2 emitted per gallon burned for gasoline cars
+    estimated_co2_emissions = estimated_total_gallons * 8.887
+
+    # --- 5. Save to DB ---
+    stats_data = {
+        "total_miles": round(total_miles, 2),
+        "estimated_total_gallons": round(estimated_total_gallons, 2),
+        "average_gas_price": round(avg_gas_price, 2),
+        "estimated_total_cost": round(estimated_total_cost, 2),
+        "estimated_co2_emissions_kg": round(estimated_co2_emissions, 2),
+    }
+    update_trip_stats(trip_id, stats_data)
