@@ -11,9 +11,9 @@ function ProfilePage() {
     password: '',
     firstName: '',
     lastName: '',
-    carMpg: '',
-    tankSize: '',
-    fuelBuffer: '',
+    mpg: '',
+    tank_size: '',
+    fuel_buffer_percent: '',
   });
 
   useEffect(() => {
@@ -28,14 +28,42 @@ function ProfilePage() {
   const handleLogin = (e) => {
     e.preventDefault();
     localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('username', formData.username);
     setIsLoggedIn(true);
   };
 
-  const handleProfileSave = (e) => {
+  const handleProfileSave = async (e) => {
     e.preventDefault();
-    localStorage.setItem('profileData', JSON.stringify(formData));
-    alert('Profile saved successfully!');
+  
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formData,
+          mpg: parseFloat(formData.mpg),
+          tank_size: parseFloat(formData.tank_size),
+          fuel_buffer_percent: parseFloat(formData.fuel_buffer_percent),
+        }),
+      });
+  
+      const data = await response.json();
+      console.log('Profile save response:', data);
+  
+      if (response.ok) {
+        alert('Profile saved successfully!');
+        navigate('/map'); // 🚀 Redirect to MapPage after saving
+      } else {
+        alert('Error saving profile.');
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      alert('Server error.');
+    }
   };
+  
 
   return (
     <div
@@ -113,9 +141,9 @@ function ProfilePage() {
               <div className="mb-4 w-full">
                 <label className="block text-gray-700 mb-2">Car MPG</label>
                 <input
-                  name="carMpg"
+                  name="mpg"
                   type="number"
-                  value={formData.carMpg}
+                  value={formData.mpg}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 rounded-md p-2"
                 />
@@ -124,9 +152,9 @@ function ProfilePage() {
               <div className="mb-4 w-full">
                 <label className="block text-gray-700 mb-2">Tank Size</label>
                 <input
-                  name="tankSize"
+                  name="tank_size"
                   type="number"
-                  value={formData.tankSize}
+                  value={formData.tank_size}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 rounded-md p-2"
                 />
@@ -135,9 +163,9 @@ function ProfilePage() {
               <div className="mb-8 w-full">
                 <label className="block text-gray-700 mb-2">Fuel Buffer (%)</label>
                 <input
-                  name="fuelBuffer"
+                  name="fuel_buffer_percent"
                   type="number"
-                  value={formData.fuelBuffer}
+                  value={formData.fuel_buffer_percent}
                   onChange={handleChange}
                   className="w-full border-2 border-gray-300 rounded-md p-2"
                 />

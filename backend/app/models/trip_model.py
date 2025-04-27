@@ -11,14 +11,20 @@ from flask import current_app
 from bson import ObjectId
 from urllib.parse import quote
 
-def create_trip(trip_data):
+def create_trip(origin, destination, user_id=None):
     """
-    Insert a new trip document into the trips collection.
+    Create and insert a new trip document into the database.
     """
     trips_collection = current_app.db.trips
-    result = trips_collection.insert_one(trip_data)
-    return str(result.inserted_id)
 
+    trip_data = {
+        'origin': origin,               # Expected to be [lat, lng]
+        'destination': destination,     # Expected to be [lat, lng]
+        'user_id': ObjectId(user_id),    
+    }
+
+    result = trips_collection.insert_one(trip_data)
+    return result.inserted_id
 def get_trip_by_id(trip_id):
     """
     Retrieve a trip document from the trips collection by its ID.
